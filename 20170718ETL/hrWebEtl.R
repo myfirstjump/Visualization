@@ -1,5 +1,6 @@
 #install.packages("rjson")
 library(rjson)
+library(dplyr)
 # import tool lists from 104, 518, yes123, 1111
 tool104raw <- fromJSON(paste(readLines("D:/iiiR/20170718ETL/crawler_1104.json"), collapse=""))
 tool518raw <- fromJSON(paste(readLines("D:/iiiR/20170718ETL/skcount518.json"), collapse=""))
@@ -35,6 +36,7 @@ toolname518 = names(tool518)
 toolnameyes123 = names(toolyes123)   
 toolname1111 = names(tool1111)
   
+
 class(names(tool104)) # character
 class(attributes(tool104)) # list
 
@@ -42,9 +44,25 @@ length(toolname104)
 length(toolname518)
 length(toolnameyes123)
 length(toolname1111)
-?union
 
-# 合併name list
+# mutiple list
+tool = c(toolname104, toolname518, toolnameyes123, toolname1111)
+LL = length(tool)
+L104 = length(tool104)
+L518 = length(tool518)
+Lyes123 = length(toolyes123)
+L1111 = length(tool1111)
+
+toolVec104 = c(unlist(tool104, use.names = FALSE), rep(0, LL- L104))
+toolVec518 = c(rep(0, L104), unlist(tool518, use.names = FALSE), rep(0,Lyes123+L1111))
+toolVecyes123 = c(rep(0, L104+L518), unlist(toolyes123, use.names = FALSE), rep(0, L1111))
+toolVec1111 = c(rep(0, LL-L1111), unlist(tool1111, use.names = FALSE))
+toolManP = c(rep("104", L104), rep("518", L518),rep("yes123", Lyes123),rep("1111", L1111))
+
+TDF = data.frame(tool, toolVec104, toolVec518, toolVecyes123, toolVec1111, toolManP)
+TDF
+write.csv(TDF, "D:/iiiR/20170718ETL/TDF.csv")
+# 合併name list 
 length(union(toolname104, toolnameyes123))
 
 toolList = Reduce(union, c(toolname104, toolname518, toolnameyes123, toolname1111))
@@ -71,6 +89,7 @@ toolAmount1111 = tool2union(tool1111)
 
 
 
+
 tooldf = data.frame(toolList, toolAmount518, toolAmount104, toolAmountyes123, toolAmount1111)
 tooldf
 str(tooldf)
@@ -81,7 +100,7 @@ tooldf$total = toolAmount104 + toolAmount1111 + toolAmount518 + toolAmountyes123
 tooldf[1:20,]
 
 toolRank = tooldf[order(-tooldf$total),]
-toolRank[1:25,]
+target = toolRank[1:20,]
 
 #write.table(toolRank, "D:/iiiR/20170718ETL/toolRank.txt")
 #write.csv(toolRank, "D:/iiiR/20170718ETL/toolRank.csv")
